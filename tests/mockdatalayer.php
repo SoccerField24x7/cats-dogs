@@ -9,8 +9,6 @@
 declare(strict_types=1);
 
 require(__DIR__ . "/../data/data.php");
-//require(__DIR__ . "/../models/cat.php");
-//require(__DIR__ . "/../models/dog.php");
 
 use PHPUnit\Framework\TestCase;
 
@@ -58,6 +56,35 @@ final class DataTest extends TestCase
         $dal = new DataAccessLayer();
         $result = $dal->select("Cat", "favoriteFood", "Friskies");
         $this->assertEquals(1, sizeof($result));
+    }
+
+    public function testMockNumberOfDogRowsCorrectAge14() : void
+    {
+        $dal = new DataAccessLayer();
+        $result = $dal->select("Dog", "age", "14");
+        $this->assertEquals(1, sizeof($result));
+    }
+
+    public function testMockAddNewCatSuccess() : void
+    {
+        $cat = new Cat(3, 'Smudge', 'Friskies');
+        $dal = new DataAccessLayer();
+        $this->assertEquals(true, $dal->insert('Cat', $cat));
+    }
+
+    public function testMockAddNewDogSuccess() : void
+    {
+        $dog = new Dog(5, 'Barkley', 'Antelope');
+        $dal = new DataAccessLayer();
+        $dal->insert('Dog', $dog);
+        $this->assertEquals(3, sizeof($dal->select('Dog', 'name', "*")));
+    }
+
+    public function testMockObjectMismatchFail() : void
+    {
+        $cat = new Cat(8, 'Kitty', 'Filet Mignon');
+        $dal = new DataAccessLayer();
+        $this->assertEquals(false, $dal->insert('Dog', $cat));
     }
 
 }
