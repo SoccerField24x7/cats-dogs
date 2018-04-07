@@ -18,31 +18,41 @@ class DataAccessLayer
     /* Mock data objects */
     private $tblDog = array();
     private $tblCat = array();
+    private $models = array('Cat', 'Dog');
     /* database connection values */
     private $server;
     private $user;
     private $password;
     private $port;
     private $database;
+    private $conn;
 
-    public function __construct($mock=true)
+    public function __construct($mock=true, $server='localhost', $user='user', $password='pas', $database='db', $port=3306)
     {
+        /* accept inbound parameters */
         $this->mock = $mock;
+        $this->server = $server;
+        $this->user = $user;
+        $this->password = $password;
+        $this->port = $port;
+        $this->database = $database;
 
         if($mock)
         {
-            /* Throw a few test records into the "database" */
-            $this->generateData();
+            /* Throw a few base test records into the "database" */
+            $this->generateMockData();
 
             print "Connecting to database";
         }
         else
         {
+            if(!$this->validDBCredentials())
+                throw new Exception('Invalid database credentials');
 
+            if(!$this->connecctDB())
+                throw new Exception('Database connection could not be established.');
         }
     }
-
-
 
     public function  beginTran(){
         print "Beginning a transaction";
@@ -56,8 +66,34 @@ class DataAccessLayer
         print "Rolling back transaction";
     }
 
-    public function insert(string $table, $object) {
-        print "Inserting " . $object->getName() . " into table " . $table;
+    public function insert(string $table, $object) : bool
+    {
+        if(!$this->validModel($table))
+            throw new Exception('Invalid table specified.');
+
+        if(!is_object($object))
+            return false;  //TODO: decide if exception or return false is best
+
+        /* in the interest of time, simple validation */
+        $objClass = get_class($object);
+        if(!$this->validModel($objClass))
+            return false;
+
+        /* last make sure you're not trying to store the wrong object in the wrong table */
+        if($table != $objClass)
+            return false;
+
+        if($this->mock)
+        {
+            print "Inserting " . $object->getName() . " into table " . $table;
+            array_push($this->{'tbl' . $table}, $object);
+        }
+        else
+        {
+            //TODO: implement
+        }
+
+        return true;
     }
 
     /* Non-required stuff */
@@ -67,6 +103,9 @@ class DataAccessLayer
         /* guard against an object as a value */
         if(is_object($value))
             throw new Exception('Value may not be an object');
+
+        if(!$this->validModel($table))
+            throw new Exception('Invalid table specified.');
         
         $result = array();
 
@@ -77,27 +116,61 @@ class DataAccessLayer
 
             $result = $this->getRecordsFromDataset("tbl$table", $field, $value);
 
-            return $result;
+            //note: no test for null because it won't be possible from here
+
         }
         else
         {
-
+            $result = $this->getRecordsFromDatabase($table, $field, $value);
         }
+
+        return $result;
+    }
+
+    private function connectDB() : bool
+    {
+        try {
+            $conn = new PDO("mysql:host=$this->server;dbname=$this->database", $this->user, $this->password);
+            if (!$conn) {
+                return false;
+            }
+
+            $this->conn = $conn;
+
+        } catch(Exception $ex) {
+            //TODO: figure out how to raise this
+            return false;
+        }
+    }
+
+    private function validDBCredentials() : bool
+    {
+        if($this->user == 'user' || $this->password == 'pass' || $this->database == 'db')
+            return false;
+
+        return true;
+    }
+
+    private function validModel(string $table) : bool
+    {
+        return in_array($table, $this->models);
     }
 
     private function getRecordsFromDataset($intTable, $prop, $value) : array
     {
-        if(!$this->mock)
+        if(!$this->mock) //fail-safe for future developers that may use this method
         {
             return null;
         }
+
+        //force numeric type. Not infallible, but will do in the interest of time.
+        $value = is_numeric($value) ? (int)$value : $value;
 
         $result = array();
 
         for($i=0 ; $i < sizeof($this->{$intTable}) ; $i++)
         {
-            $tmp = 'get' . ucfirst($prop);
-
+            /* if get() or * specified */
             if($this->{$intTable}[$i]->{'get' . ucfirst($prop)}() === $value || $value == '*')
             {
                 array_push($result, $this->{$intTable}[$i]);
@@ -109,15 +182,26 @@ class DataAccessLayer
 
     private function getRecordsFromDatabase($table, $column, $value) : array
     {
-        if($this->mock)
+        if($this->mock)  //fail-safe for future developers that may use this method
         {
             return null;
         }
 
+        $result = array();
+        $sql = $value == '*' ? "SELECT * FROM $table WHERE": "SELECT * FROM $table WHERE $column='$value'";
 
+        $data = $this->query($sql);
+        if($this->conn->errorCode() != '00000')
+        {
+            return $result;
+        }
+
+        $result = $data->fetchAlll(PDO::FETCH_OBJ);
+
+        return $result;
     }
 
-    private static function PopulateObject($objIn, $objOut) : bool
+    /*private static function PopulateObject($objIn, $objOut) : bool
     {
         try {
             $reflector = new ReflectionClass(get_class($objOut));
@@ -138,9 +222,9 @@ class DataAccessLayer
         }
 
         return true;
-    }
+    }*/
 
-    private function generateData()
+    private function generateMockData()
     {
         /* create dogs */
         $dog = new dog(14, "OldTimer", "Alpo");
