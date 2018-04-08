@@ -72,5 +72,6 @@ abstract class Pet implements iPet
         return $this->petTypeId;
     }
 
-    abstract function getTrinomialName() : string;
+    abstract public static function toModel($obj);
+    abstract public function getTrinomialName() : string;
 }
