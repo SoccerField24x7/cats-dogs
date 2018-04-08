@@ -27,7 +27,7 @@ class DataAccessLayer
     private $database;
     private $conn;
 
-    public function __construct($mock=true, $server='localhost', $user='user', $password='pas', $database='db', $port=3306)
+    public function __construct($mock=true, $server='localhost', $user='user', $password='pass', $database='db', $port=3306)
     {
         /* accept inbound parameters */
         $this->mock = $mock;
@@ -42,28 +42,28 @@ class DataAccessLayer
             /* Throw a few base test records into the "database" */
             $this->generateMockData();
 
-            print "Connecting to database";
+            print "Connecting to database" . PHP_EOL;
         }
         else
         {
             if(!$this->validDBCredentials())
                 throw new Exception('Invalid database credentials');
 
-            if(!$this->connecctDB())
+            if(!$this->connectDB())
                 throw new Exception('Database connection could not be established.');
         }
     }
 
     public function  beginTran(){
-        print "Beginning a transaction";
+        print "Beginning a transaction" . PHP_EOL;
     }
 
     public function commit() {
-        print "Committing transaction";
+        print "Committing transaction" . PHP_EOL;
     }
 
     public function rollback() {
-        print "Rolling back transaction";
+        print "Rolling back transaction" . PHP_EOL;
     }
 
     public function insert(string $table, $object) : bool
@@ -85,12 +85,19 @@ class DataAccessLayer
 
         if($this->mock)
         {
-            print "Inserting " . $object->getName() . " into table " . $table;
+            print "Inserting " . $object->getName() . " into table " . $table . PHP_EOL;
+            $object->setId($this->getNextId($table));
             array_push($this->{'tbl' . $table}, $object);
         }
         else
         {
-            //TODO: implement
+            $sql = "INSERT INTO $table (PetTypeId, Age, FavoriteFood, `Name`)VALUES(" . $object->getPetTypeId() . "," . $object->getAge() . "," . $this->conn->quote($object->getFavoriteFood()) . "," . $this->conn->quote($object->getName()) . ")";
+            $this->conn->query($sql);
+            if($this->conn->errorCode() != '00000')
+            {
+                $err = $this->conn->errorInfo();
+                throw new Exception($err[2]);
+            }
         }
 
         return true;
@@ -127,6 +134,11 @@ class DataAccessLayer
         return $result;
     }
 
+    private function getNextId(string $model)
+    {
+        return sizeof($this->{'tbl' . $model});
+    }
+
     private function connectDB() : bool
     {
         try {
@@ -138,9 +150,11 @@ class DataAccessLayer
             $this->conn = $conn;
 
         } catch(Exception $ex) {
-            //TODO: figure out how to raise this
+            //TODO: decide if/how to raise this
             return false;
         }
+
+        return true;
     }
 
     private function validDBCredentials() : bool
@@ -188,55 +202,45 @@ class DataAccessLayer
         }
 
         $result = array();
-        $sql = $value == '*' ? "SELECT * FROM $table WHERE": "SELECT * FROM $table WHERE $column='$value'";
+        $sql = $value == '*' ? "SELECT * FROM $table": "SELECT * FROM $table WHERE $column='$value'";
 
-        $data = $this->query($sql);
+        $data = $this->conn->query($sql);
         if($this->conn->errorCode() != '00000')
         {
             return $result;
         }
 
-        $result = $data->fetchAlll(PDO::FETCH_OBJ);
+        $result = $data->fetchAll(PDO::FETCH_OBJ);
+        foreach($result as $row)
+        {
+            $obj = null;
+            try
+            {
+                $obj = $table == 'Cat' ? Cat::toModel($row) : Dog::toModel($row);
+            }
+            catch (Exception $ex)
+            {
+                throw $ex;
+            }
+            array_push($result, $obj);
+        }
 
         return $result;
     }
 
-    /*private static function PopulateObject($objIn, $objOut) : bool
-    {
-        try {
-            $reflector = new ReflectionClass(get_class($objOut));
-        }
-        catch(Exception $ex)
-        {
-            //TODO: log
-            return false;
-        }
-
-        foreach($objIn as $key => $value)
-        {
-            $property = $reflector->getProperty($key);
-
-            if(!$property->isPrivate())
-                $objOut->{$key} = $value;
-
-        }
-
-        return true;
-    }*/
-
     private function generateMockData()
     {
         /* create dogs */
-        $dog = new dog(14, "OldTimer", "Alpo");
-        array_push($this->tblDog, $dog);
-        $dog = new dog(5, "Fido", "Alpo");
-        array_push($this->tblDog, $dog);
+        $dog = new dog("OldTimer", 14, "Alpo");
+        $this->insert(get_class($dog), $dog);
+        $dog = new dog("Fido", 5, "Alpo");
+        $this->insert(get_class($dog), $dog);
 
         /* create cats */
-        $cat = new Cat(3, "Boots", "Purina");
-        array_push($this->tblCat, $cat);
-        $cat = new Cat(8, "Mr. Kit", "Friskies");
-        array_push($this->tblCat, $cat);
+        $cat = new Cat("Boots", 3, "Purina");
+        $this->insert(get_class($cat), $cat);
+        $cat = new Cat("Mr. Kit", 8, "Friskies");
+        $this->insert(get_class($cat), $cat);
 
     }
 }
