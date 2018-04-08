@@ -17,7 +17,7 @@ Class Dog extends Pet
     private $Subspecies = "Familiaris";
     private $DogId = 0;
 
-    public function __construct(int $petAge = 0, string $petName = '', string $petFood = '')
+    public function __construct(string $petName = '', int $petAge = 0, string $petFood = '')
     {
         parent::__construct($this->Family, $this->Genus, $this->Species, $this->Subspecies, $petAge, $petName, $petFood);
         $this->petTypeId = 1;
