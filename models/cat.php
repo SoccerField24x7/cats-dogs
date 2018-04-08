@@ -50,10 +50,10 @@ class Cat extends Pet
 
         try
         {
-            $cat->setName($obj->getName());
-            $cat->setFavoriteFood($obj->getFavoriteFood);
-            $cat->setAge($obj->getAge());
-            $cat->setId($obj->getId());
+            $cat->setName($obj->Name);
+            $cat->setFavoriteFood($obj->FavoriteFood);
+            $cat->setAge($obj->Age);
+            $cat->setId($obj->CatId);
             $cat->setpetTypeId(2);
         }
         catch (Exception $ex)
