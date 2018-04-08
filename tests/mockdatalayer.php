@@ -67,14 +67,14 @@ final class MockDataTest extends TestCase
 
     public function testMockAddNewCatSuccess() : void
     {
-        $cat = new Cat(3, 'Smudge', 'Friskies');
+        $cat = new Cat('Smudge', 15, 'Friskies');
         $dal = new DataAccessLayer();
         $this->assertEquals(true, $dal->insert('Cat', $cat));
     }
 
     public function testMockAddNewDogSuccess() : void
     {
-        $dog = new Dog(5, 'Barkley', 'Antelope');
+        $dog = new Dog('Barkley', 5, 'Antelope');
         $dal = new DataAccessLayer();
         $dal->insert('Dog', $dog);
         $this->assertEquals(3, sizeof($dal->select('Dog', 'name', "*")));
