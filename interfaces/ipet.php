@@ -21,4 +21,7 @@ interface iPet
     /* bonus coverage to show/test specific things */
     public function getTrinomialName() : string;
     public function getPetType() : string;
+    public function getId() : int;
+    public function setId(int $Id) : void;
+    public static function toModel($obj);
 }
