@@ -49,10 +49,10 @@ Class Dog extends Pet
 
         try
         {
-            $dog->setName($obj->getName());
-            $dog->setFavoriteFood($obj->getFavoriteFood);
-            $dog->setAge($obj->getAge());
-            $dog->setId($obj->getId());
+            $dog->setName($obj->Name);
+            $dog->setFavoriteFood($obj->FavoriteFood);
+            $dog->setAge($obj->Age);
+            $dog->setId($obj->DogId);
             $dog->setpetTypeId(1);
         }
         catch (Exception $ex)
