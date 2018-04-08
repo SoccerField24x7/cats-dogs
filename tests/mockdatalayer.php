@@ -12,9 +12,9 @@ require(__DIR__ . "/../data/data.php");
 
 use PHPUnit\Framework\TestCase;
 
-final class DataTest extends TestCase
+final class MockDataTest extends TestCase
 {
-    public function testCanCatBeCreated() : void
+    public function testCanMockBeCreated() : void
     {
         $this->assertInstanceOf(
             DataAccessLayer::class, new DataAccessLayer()
