@@ -16,12 +16,12 @@ class Cat extends Pet
     private $Genus = "Felis";
     private $Species = "Silvestris";
     private $Subspecies = "Catus";
-
+    private $CatId = 0;
 
     public function __construct(int $petAge = 0, string $petName = '', string $petFood = '')
     {
         parent::__construct($this->Family, $this->Genus, $this->Species, $this->Subspecies, $petAge, $petName, $petFood);
-        $this->petType = 2;
+        $this->petTypeId = 2;
     }
 
     public function getTriNomialName() : string
@@ -29,4 +29,38 @@ class Cat extends Pet
         return $this->Genus . ' ' . $this->Species . ' ' . $this->Subspecies;
     }
 
+    public function setId(int $petId) : void
+    {
+        $this->CatId = $petId;
+    }
+
+    public function getId() : int
+    {
+        return $this->CatId;
+    }
+
+    public static function toModel($obj)
+    {
+        if(!is_object($obj))
+        {
+            return null;
+        }
+
+        $cat = new Cat();
+
+        try
+        {
+            $cat->setName($obj->getName());
+            $cat->setFavoriteFood($obj->getFavoriteFood);
+            $cat->setAge($obj->getAge());
+            $cat->setId($obj->getId());
+            $cat->setpetTypeId(2);
+        }
+        catch (Exception $ex)
+        {
+            throw new Exception($ex->getMessage());
+        }
+
+        return $cat;
+    }
 }
