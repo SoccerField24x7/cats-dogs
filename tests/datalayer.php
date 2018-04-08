@@ -40,14 +40,14 @@ final class DataTest extends TestCase
     public function testCreateCatSuccess() : void
     {
         $dal = new DataAccessLayer(false, $this->server, $this->user, $this->password, $this->database);
-        $cat = new Cat(2,'Meowth','Pizza');
+        $cat = new Cat('Meowth',2,'Pizza');
         $this->assertEquals(true, $dal->insert('Cat', $cat));
     }
 
     public function testCreateDogSuccess() : void
     {
         $dal = new DataAccessLayer(false, $this->server, $this->user, $this->password, $this->database);
-        $dog = new Dog(2,'Barkley','Mailmen');
+        $dog = new Dog('Barkley', 2,'Mailmen');
         $this->assertEquals(true, $dal->insert('Dog', $dog));
     }
 
@@ -59,7 +59,7 @@ final class DataTest extends TestCase
         $beforeCount = sizeof($result);
 
         /* insert new */
-        $dog = new Dog(8,'Rover','Alpo');
+        $dog = new Dog('Rover', 8, 'Alpo');
         $dal->insert('Dog', $dog);
 
         /* make sure s'all good */
@@ -76,7 +76,7 @@ final class DataTest extends TestCase
         $beforeCount = sizeof($result);
 
         /* insert new */
-        $cat = new Cat(7,'Whiskers','Iams');
+        $cat = new Cat('Whiskers',7,'Iams');
         $dal->insert('Cat', $cat);
 
         /* make sure s'all good */
