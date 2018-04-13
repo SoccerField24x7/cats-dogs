@@ -34,7 +34,7 @@ abstract class Pet implements iPet
 
     public function setFavoriteFood(string $petFood) : void
     {
-        $this->food = $petFood;
+        $this->favoriteFood = $petFood;
     }
 
     public function setName(string $petName) : void
