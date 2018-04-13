@@ -18,7 +18,7 @@ class DataAccessLayer
     /* Mock data objects */
     private $tblDog = array();
     private $tblCat = array();
-    private $models = array('Cat', 'Dog');
+    private static $models = array('Cat', 'Dog');
     /* database connection values */
     private $server;
     private $user;
@@ -68,7 +68,7 @@ class DataAccessLayer
 
     public function insert(string $table, $object) : bool
     {
-        if(!$this->validModel($table))
+        if(!self::validModel($table))
             throw new Exception('Invalid table specified.');
 
         if(!is_object($object))
@@ -76,7 +76,7 @@ class DataAccessLayer
 
         /* in the interest of time, simple validation */
         $objClass = get_class($object);
-        if(!$this->validModel($objClass))
+        if(!self::validModel($objClass))
             return false;
 
         /* last make sure you're not trying to store the wrong object in the wrong table */
@@ -165,9 +165,9 @@ class DataAccessLayer
         return true;
     }
 
-    private function validModel(string $table) : bool
+    private static function validModel(string $table) : bool
     {
-        return in_array($table, $this->models);
+        return in_array($table, self::$models);
     }
 
     private function getRecordsFromDataset($intTable, $prop, $value) : array
