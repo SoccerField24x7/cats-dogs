@@ -51,3 +51,6 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+#keep top secret code challenge originator from being exposed
+documentation/
+
