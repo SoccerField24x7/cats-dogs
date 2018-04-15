@@ -12,13 +12,21 @@ if(!class_exists("Dog"))
 if(!class_exists("Cat"))
     require(__DIR__ . "/../models/cat.php");
 
+if(!class_exists("DogName"))
+    require(__DIR__ . "/../models/dogname.php");
+
+if(!class_exists("CatName"))
+    require(__DIR__ . "/../models/catname.php");
+
 class DataAccessLayer
 {
     private $mock;
     /* Mock data objects */
     private $tblDog = array();
     private $tblCat = array();
-    private static $models = array('Cat', 'Dog');
+    private $tblDogName = array();
+    private $tblCatName = array();
+    private static $models = array('Cat', 'Dog', 'CatName', 'DogName');
     /* database connection values */
     private $server;
     private $user;
@@ -55,15 +63,42 @@ class DataAccessLayer
     }
 
     public function  beginTran(){
-        print "Beginning a transaction" . PHP_EOL;
+
+        if($this->mock)
+        {
+            print "Beginning a transaction" . PHP_EOL;
+        }
+        else
+        {
+            $sql = "START TRANSACTION";
+            $this->conn->query($sql);
+        }
     }
 
     public function commit() {
-        print "Committing transaction" . PHP_EOL;
+
+        if($this->mock)
+        {
+            print "Committing transaction" . PHP_EOL;
+        }
+        else
+        {
+            $sql = "COMMIT";
+            $this->conn->query($sql);
+        }
     }
 
     public function rollback() {
-        print "Rolling back transaction" . PHP_EOL;
+
+        if($this->mock)
+        {
+            print "Rolling back transaction" . PHP_EOL;
+        }
+        else
+        {
+            $sql = "ROLLBACK";
+            $this->conn->query($sql);
+        }
     }
 
     public function insert(string $table, $object) : bool
@@ -83,22 +118,38 @@ class DataAccessLayer
         if($table != $objClass)
             return false;
 
+        $this->beginTran();
+
         if($this->mock)
         {
             print "Inserting " . $object->getName() . " into table " . $table . PHP_EOL;
-            $object->setId($this->getNextId($table));
+
+
+            $object->setId($this->getNextId($table));//get "auto-increment" value
             array_push($this->{'tbl' . $table}, $object);
+
+            //"save" name(s)
+            foreach($object->getNames() as $name)
+            {
+                $pet = $table == 'Dog' ? new DogName($object->getId(), $name) : new CatName($object->getId(), $name);
+                $pet->{'set' . $table . 'NameId'}($this->getNextId($table . 'Name'));  //get "auto-increment" value
+                array_push($this->{'tbl' . $table . 'Name'}, $pet);
+            }
         }
         else
         {
-            $sql = "INSERT INTO $table (PetTypeId, Age, FavoriteFood, `Name`)VALUES(" . $object->getPetTypeId() . "," . $object->getAge() . "," . $this->conn->quote($object->getFavoriteFood()) . "," . $this->conn->quote($object->getName()) . ")";
+            //TODO: could make this generic enough to save all, in the interest of time, I'll specifically look for Cat/Dog
+            $sql = "INSERT INTO $table (Age, FavoriteFood)VALUES(" . $object->getPetTypeId() . "," . $object->getAge() . "," . $this->conn->quote($object->getFavoriteFood()) . "," . $this->conn->quote($object->getName()) . ")";
             $this->conn->query($sql);
             if($this->conn->errorCode() != '00000')
             {
                 $err = $this->conn->errorInfo();
+                $this->rollback();
                 throw new Exception($err[2]);
             }
         }
+
+        $this->commit();
 
         return true;
     }
@@ -122,8 +173,9 @@ class DataAccessLayer
                 throw new Exception('Table tbl' . $table . ' does not exist');
 
             $result = $this->getRecordsFromDataset("tbl$table", $field, $value);
-
             //note: no test for null because it won't be possible from here
+
+            //note: no need to read names. mock-data stores the array attached. TODO: change this to not store names attached to Cat/Dog, thus suporting independent deletion of names (again, in the interest of time)
 
         }
         else
