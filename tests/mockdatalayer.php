@@ -82,7 +82,7 @@ final class MockDataTest extends TestCase
 
     public function testMockObjectMismatchFail() : void
     {
-        $cat = new Cat(8, 'Kitty', 'Filet Mignon');
+        $cat = new Cat('Kitty', 8, 'Filet Mignon');
         $dal = new DataAccessLayer();
         $this->assertEquals(false, $dal->insert('Dog', $cat));
     }
