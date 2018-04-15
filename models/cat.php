@@ -63,4 +63,13 @@ class Cat extends Pet
 
         return $cat;
     }
+
+    public function speak($sound="Meow") : string
+    {
+        /* because of a strange genetic disease, cats actually age when speaking */
+        if($this->speaks++ % 5 == 0)
+            $this->age++;
+
+        return $sound;
+    }
 }
