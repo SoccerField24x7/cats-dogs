@@ -50,7 +50,7 @@ class Cat extends Pet
 
         try
         {
-            $cat->setName($obj->Name);
+            $cat->setNames($obj->Name);
             $cat->setFavoriteFood($obj->FavoriteFood);
             $cat->setAge($obj->Age);
             $cat->setId($obj->CatId);
