@@ -17,6 +17,9 @@ interface iPet
     public function setName(string $petName) : void;
     public function setAge(int $petAge) : void;
     public function setFavoriteFood(string $petFood) : void;
+    public function speak() : string;
+    public function getAverageNameLength() : int;
+    public function getNames() : array;
 
     /* bonus coverage to show/test specific things */
     public function getTrinomialName() : string;
