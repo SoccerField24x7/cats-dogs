@@ -139,13 +139,28 @@ class DataAccessLayer
         else
         {
             //TODO: could make this generic enough to save all, in the interest of time, I'll specifically look for Cat/Dog
-            $sql = "INSERT INTO $table (Age, FavoriteFood)VALUES(" . $object->getPetTypeId() . "," . $object->getAge() . "," . $this->conn->quote($object->getFavoriteFood()) . "," . $this->conn->quote($object->getName()) . ")";
+            $sql = "INSERT INTO $table (Age, FavoriteFood)VALUES(" . $object->getAge() . "," . $this->conn->quote($object->getFavoriteFood()) . ")";
             $this->conn->query($sql);
             if($this->conn->errorCode() != '00000')
             {
                 $err = $this->conn->errorInfo();
                 $this->rollback();
                 throw new Exception($err[2]);
+            }
+
+            $object->setId($this->conn->lastInsertId());
+
+            //persist names
+            foreach($object->getNames() as $name)
+            {
+                $sql = "INSERT INTO $table" . "Name($table" . "Id, `Name`) VALUES(" . $object->getId() . "," . $this->conn->quote($object->getName()) . ")";
+                $this->conn->query($sql);
+                if($this->conn->errorCode() != '00000')
+                {
+                    $err = $this->conn->errorInfo();
+                    $this->rollback();
+                    throw new Exception($err[2]);
+                }
             }
         }
 
@@ -254,7 +269,18 @@ class DataAccessLayer
         }
 
         $result = array();
-        $sql = $value == '*' ? "SELECT * FROM $table": "SELECT * FROM $table WHERE $column='$value'";
+        $sql = '';
+        if($value == '*')
+            $sql = "SELECT * FROM $table";
+
+        if(strtoLower($column) == 'name' && $sql == '')
+        {
+            $sql = "SELECT p.* FROM " . $table . "Name AS n LEFT JOIN $table AS p on n." . $table . "Id=p." . $table . "Id WHERE Name=" . $this->conn->quote($value);
+        }
+        else if($sql == '')
+        {
+            $sql = "SELECT * FROM $table WHERE $column='$value'";
+        }
 
         $data = $this->conn->query($sql);
         if($this->conn->errorCode() != '00000')
@@ -262,9 +288,25 @@ class DataAccessLayer
             return $result;
         }
 
-        $result = $data->fetchAll(PDO::FETCH_OBJ);
-        foreach($result as $row)
+        $rows = $data->fetchAll(PDO::FETCH_OBJ);
+        foreach($rows as $row)
         {
+            /* pull in name records */
+            $sql = "SELECT `Name` FROM " . $table . "Name WHERE " . $table . "Id=" . $row->{$table . 'Id'};
+            $names = $this->conn->query($sql);
+            if($this->conn->errorCode() != '00000')
+            {
+                throw new Exception('fix'); //TODO: fix
+            }
+            $row->Name = array();
+
+            $nms = $names->fetchAll(PDO::FETCH_OBJ);
+            foreach($nms as $petName)
+            {
+                array_push($row->Name, $petName);
+            }
+
+
             $obj = null;
             try
             {
