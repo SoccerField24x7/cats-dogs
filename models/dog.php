@@ -49,7 +49,7 @@ Class Dog extends Pet
 
         try
         {
-            $dog->setName($obj->Name);
+            $dog->setNames($obj->Name);
             $dog->setFavoriteFood($obj->FavoriteFood);
             $dog->setAge($obj->Age);
             $dog->setId($obj->DogId);
@@ -61,5 +61,14 @@ Class Dog extends Pet
         }
 
         return $dog;
+    }
+
+    public function speak($sound="Woof") : string
+    {
+        /* perhaps this is actually contagious?!? */
+        if($this->speaks++ % 5 == 0)
+            $this->age++;
+
+        return $sound;
     }
 }
