@@ -84,6 +84,11 @@ abstract class Pet implements iPet
         return $this->petTypeId;
     }
 
+    public function setNames(array $names)
+    {
+        $this->name = $names;
+    }
+
     //TODO: add guard logic to ensure
     public function getAverageNameLength() : int
     {
