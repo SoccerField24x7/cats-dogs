@@ -101,7 +101,13 @@ class DataAccessLayer
         }
     }
 
-    public function insert(string $table, $object) : bool
+    /**
+     * @param string $table
+     * @param Pet $object
+     * @return bool
+     * @throws Exception
+     */
+    public function insert(string $table, Pet $object) : bool
     {
         if(!self::validModel($table))
             throw new Exception('Invalid table specified.');
@@ -171,6 +177,13 @@ class DataAccessLayer
 
     /* Non-required stuff */
 
+    /**
+     * @param string $table
+     * @param string $field
+     * @param $value
+     * @return array
+     * @throws Exception
+     */
     public function select(string $table, string $field, $value) : array
     {
         /* guard against an object as a value */
@@ -205,6 +218,7 @@ class DataAccessLayer
     {
         return sizeof($this->{'tbl' . $model});
     }
+
 
     private function connectDB() : bool
     {
@@ -261,6 +275,13 @@ class DataAccessLayer
         return $result;
     }
 
+    /**
+     * @param $table
+     * @param $column
+     * @param $value
+     * @return array
+     * @throws Exception
+     */
     private function getRecordsFromDatabase($table, $column, $value) : array
     {
         if($this->mock)  //fail-safe for future developers that may use this method
@@ -322,6 +343,9 @@ class DataAccessLayer
         return $result;
     }
 
+    /**
+     * @throws Exception
+     */
     private function generateMockData()
     {
         /* create dogs */
